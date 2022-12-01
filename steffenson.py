@@ -23,10 +23,13 @@ def stef_iteration(c0, c1, c2):
 def g(x):
     return math.sqrt(x)
 
-df = pd.DataFrame(columns=['n', 'c0', 'c1', 'c2', 'c_new', '|c_new - c0|'])
-df = steffenson(g, 0, 1, 5, 1e-6, df)
 
-print("\n\nstef\n\n", df)
+# if name main
+if __name__ == "__main__":
+    df = pd.DataFrame(columns=['n', 'c0', 'c1', 'c2', 'c_new', '|c_new - c0|'])
+    df = steffenson(g, 0, 1, 5, 1e-6, df)
 
-lat = df.to_latex()
-print(lat)
+    print("\n\nstef\n\n", df)
+
+    lat = df.to_latex()
+    print(lat)

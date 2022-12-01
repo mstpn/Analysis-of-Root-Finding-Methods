@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np
 
-def newton_method(f, Df, x0, TOL = 1e-4, Nmax = 100, Frame = True):
+def newton_method(f, Df, x0, TOL = 1e-4, nmax = 100, Frame = True):
     '''
     Parameters
     ----------
@@ -13,7 +13,7 @@ def newton_method(f, Df, x0, TOL = 1e-4, Nmax = 100, Frame = True):
         DESCRIPTION. Initial estimate
     TOL : TYPE, optional
         DESCRIPTION. Tolerance (epsilon). The default is 1e-4.
-    Nmax : Int, optional
+    nmax : Int, optional
         DESCRIPTION. Maximum number of iterations. The default is 100.
     Frame : bool, optional
         DESCRIPTION. If it is true, a dataframe will be returned. The default is True.
@@ -26,11 +26,11 @@ def newton_method(f, Df, x0, TOL = 1e-4, Nmax = 100, Frame = True):
 
     '''
 
-    xn=np.zeros(Nmax, dtype=float)
-    fxn=np.zeros(Nmax, dtype=float)
-    Dfxn=np.zeros(Nmax, dtype=float)
+    xn=np.zeros(nmax, dtype=float)
+    fxn=np.zeros(nmax, dtype=float)
+    Dfxn=np.zeros(nmax, dtype=float)
     xn[0] = x0
-    for n in range(0,Nmax-1):
+    for n in range(0,nmax-1):
         fxn[n] = f(xn[n])
         if abs(fxn[n]) < TOL:
             Dfxn[n] = Df(xn[n])
