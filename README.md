@@ -3,8 +3,8 @@
 Term project for MATH 3101
 
 ## Dependencies
-pandas
-numpy
+pandas  
+numpy  
 matplotlib
 
 ## Build
