@@ -2,7 +2,12 @@ import math
 import pandas as pd
 
 
-# rewrite this using he np.zeros() array method found in other functions
+#! rewrite this using the np.zeros() array method found in other functions
+
+
+
+
+
 def steffenson(g, a, b, nmax, tol, df):
     c0 = (a + b) / 2
     for n in range(nmax + 1):

@@ -1,38 +1,5 @@
 import pandas as pd
 import numpy as np
-import tester
-from time import time_ns
-
-
-def test(nmax, tol, frame, range_steps, coef_steps, degree_steps, num_runs):
-    # result_dict = {range#: {degree#: {coefficient#: [time, #iterations]}}}
-    result_dict = {}
-    for abs_range in (10**x for x in range(1, range_steps+1)):
-        result_dict[abs_range] = {}
-        for degree in (2*x + 1 for x in range(0, degree_steps)):
-            result_dict[abs_range][degree] = {}
-            for coef in (10**x for x in range(0, coef_steps)):
-                print(
-                    f"abs_range: {abs_range}, degree: {degree}, coef: {coef}")
-                # f = generate_polynomial(degree, coef)
-                elapsed_time = 0
-                num_iterations = 0
-                for i in range(0, num_runs):  
-                    f = tester.generate_polynomial_offset(degree, coef,np.random.randint(-abs_range+1, abs_range-1),0)
-                    start = time_ns()
-                    result = bisection(
-                        f, -abs_range, abs_range+1, nmax, tol, frame)
-                    end = time_ns()
-                    if result is not None:
-                        # store time in nanoseconds
-                        elapsed_time += (end - start)
-                        # store number of iterations
-                        num_iterations += len(result) - 1
-                # store result
-                avg_time = elapsed_time/num_runs
-                avg_iterations = num_iterations/num_runs
-                result_dict[abs_range][degree][coef] = [avg_time, avg_iterations]
-    return result_dict
 
 
 def bisection(f, a, b, nmax=1000, tol=1e-4, frame=True):

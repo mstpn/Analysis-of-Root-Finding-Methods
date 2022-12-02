@@ -1,21 +1,4 @@
-"""
-? Keep dataframe return in calculation?
-    yes
-? Balanced ranges (i.e. {-1,1} and {0,2} are same range, but not symmetric)
-    balanced
-? Coefficients for degrees (x^2 vs 100x^2)
-    yes
-? Trailing terms in degrees (x^3 vs x^3 + x^2 + x)
-    no
-? Tolerance
-    1E-10
-? nmax
-    1000
-? Where to time (in function or outside)
-    outside
-
- """
-
+# File imports
 import bisection
 import bisection_mod
 import bisection_nmax
@@ -26,70 +9,14 @@ import secant_method
 import regula_falsi
 import steffenson
 
+# Library imports
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from time import time_ns
+import csv
 
-""" 
-TODO: Add a function that generates test case functions and stores them in an array
-3d array:
-    1st dimension: degree
-    2nd dimension: coefficient
-    3rd dimension: range
-
-"""
-
-# return a function that is a polynomial of degree with a coefficient
-
-# generate a random polynomial of degree with a coefficient
-# def generate_random_polynomial(degree, coefficient):
-#     def f(x):
-#         return coefficient * (x+np.random.randint(-100,100))**degree + np.random.randint(-100, 100)
-#     return f
-def generate_polynomial(degree, coefficient):
-    def f(x):
-        return coefficient * x**degree + x
-    return f
-
-# return a function that is a polynomial of degree with a coefficient, x and y offsets
-def generate_polynomial_offset(degree, coefficient, x_offset, y_offset):
-    def f(x):
-        return coefficient * (x+x_offset)**degree + y_offset
-    return f
-
-# return a function that is the derivative of a polynomial of degree with a coefficient
-def generate_derivative(degree, coefficient):
-    def f(x):
-        if degree - 1 < 0:
-            return None
-        return coefficient * degree * x**(degree - 1)
-    return f
-
-# return a function that is the second derivative of a polynomial of degree with a coefficient
-def generate_second_derivative(degree, coefficient):
-    def f(x):
-        if degree - 2 < 0:
-            return None
-        return coefficient * degree * (degree - 1) * x**(degree - 2)
-    return f
-
-
-"""
-TODO: Create a function that tests runs the test suite on each function
-store functions in array?
-Use helper function that knows what parameters to pass to each function
-    how? 
-        do we just use write each one manually?
-need to time run of the function and store it in an array of dicts?
-    dict: {concat(function_name, degree, coefficient, range): time}
-
-    orrrrr
-        we have the 3d array of test cases, but they are actually dicts
-            we have the key be the case, then the value is an array of dicts
-                dict: {function_name: time}
-
-"""
-
+# Constants
 NMAX = 1000
 TOL = 1E-10
 FRAME = True
@@ -99,35 +26,163 @@ RANGE_STEPS = 5
 COEF_STEPS = 5
 DEGREE_STEPS = 5
 NUM_RUNS = 100
+METHODS = [
+    "bisection",
+    "bisection_mod",
+    # "fixed_point",
+    # "newton_method_mod",
+    # "newton_method",
+    # "secant_method",
+    # "regula_falsi",
+    # "steffenson"
+]
 
 
-# TODO: change the range, coeff, degree steps to be calculated ahead of time and passed in??
+def generate_polynomial_offset(degree, coefficient, x_offset, y_offset):
+    """
+    Returns a function that is a polynomial of degree with a coefficient, x and y offsets
+    """
+    def f(x):
+        return coefficient * (x+x_offset)**degree + y_offset
+    return f
 
-# Main function
+
+def generate_derivative(degree, coefficient):
+    """
+    Returns a function that is the derivative of a polynomial of degree with a coefficient
+    """
+    def f(x):
+        if degree - 1 < 0:
+            return None
+        return coefficient * degree * x**(degree - 1)
+    return f
+
+
+def generate_second_derivative(degree, coefficient):
+    """ 
+    Returns a function that is the second derivative of a polynomial of degree with a coefficient
+    """
+    def f(x):
+        if degree - 2 < 0:
+            return None
+        return coefficient * degree * (degree - 1) * x**(degree - 2)
+    return f
+
+
+def test(method, nmax, tol, frame, range_steps, coef_steps, degree_steps, num_runs):
+    """
+    Test a method with a range of functions
+
+    Parameters:
+        method: method to test
+        nmax: maximum number of iterations
+        tol: tolerance
+        frame: whether to return dataframe
+        range_steps: number of steps to take in range
+        coef_steps: number of steps to take in coefficient
+        degree_steps: number of steps to take in degree
+        num_runs: number of runs to average
+
+    return dictionary format
+        {range#: {degree#: {coefficient#: [time, #iterations]}}}
+    """
+
+    result_dict = {}
+    for abs_range in (10**x for x in range(1, range_steps+1)):
+        result_dict[abs_range] = {}
+        for degree in (2*x + 1 for x in range(0, degree_steps)):
+            result_dict[abs_range][degree] = {}
+            for coef in (10**x for x in range(0, coef_steps)):
+                print(
+                    f"abs_range: {abs_range}, degree: {degree}, coef: {coef}")
+                elapsed_time = 0
+                num_iterations = 0
+                valid_runs = 0
+                for i in range(0, num_runs):
+                    abs_offset = 10
+                    x_offset = np.random.randint(-abs_offset, abs_offset)
+                    y_offset = 0
+                    f = generate_polynomial_offset(
+                        degree, coef, x_offset, y_offset)
+                    # ===timing starts here===
+                    start = time_ns()
+                    result = method_test(
+                        method, f, abs_range, nmax, tol, frame)
+                    end = time_ns()
+                    # ===timing ends here===
+                    if result is not None:
+                        # store time in nanoseconds
+                        elapsed_time += (end - start)
+                        # store number of iterations
+                        num_iterations += len(result) - 1
+                        valid_runs += 1
+                # store result
+                if valid_runs > 0:
+                    avg_time = elapsed_time / valid_runs
+                    avg_iterations = num_iterations / valid_runs
+                    result_dict[abs_range][degree][coef] = [
+                        avg_time, avg_iterations]
+    return result_dict
+
+
+def method_test(name, f, abs_range, nmax, tol, frame):
+    """
+    Test a specific method
+
+    Parameters:
+        name: name of module to test
+        f: function to test
+        abs_range: absolute range ofTODO: Writeup function
+        nmax: maximum number of iterations
+        tol: tolerance
+        frame: whether to return dataframe
+    """
+
+    if name not in METHODS:
+        print("Method not found")
+    elif name == "bisection":
+        return bisection.bisection(f, -abs_range, abs_range+1, nmax, tol, frame)
+    elif name == "bisection_mod":
+        return bisection_mod.bisection_mod(f, -abs_range, abs_range+1, tol, frame)
+    elif name == "fixed_point":
+        pass
+    elif name == "newton_method_mod":
+        pass
+    elif name == "newton_method":
+        pass
+    elif name == "secant_method":
+        pass
+    elif name == "regula_falsi":
+        pass
+    elif name == "steffenson":
+        pass
+    return None
+
+
 if __name__ == "__main__":
+    """
+    Main function
+    """
+
+    # =====================================
+    #              Calculation
+    # =====================================
+
     # {method: {range#: {degree#: {coefficient#: [time, #iterations]}}}}
     results = {}
+    for method in METHODS:
+        print("\n\n\n=========================================")
+        print(f"\t{method}")
+        print("\n=========================================")
+        results[method] = test(
+            method, NMAX, TOL, FRAME, RANGE_STEPS, COEF_STEPS, DEGREE_STEPS, NUM_RUNS)
 
-    # BISECTION
-    # ! We need to step degree to be only odd numbers
-    # TODO: apply this for all methods
-    
-    print("=========================================")
-    print("\tBISECTION")
-    print("=========================================")
-    results["bisection"] = bisection.test(
-        NMAX, TOL, FRAME, RANGE_STEPS, COEF_STEPS, DEGREE_STEPS, NUM_RUNS)
+    # =====================================
+    #              Graphing
+    # TODO: save graphs to file
+    # =====================================
 
-    # BISECTION MOD
-    print("=========================================")
-    print("\tBISECTION MOD")
-    print("=========================================")
-    results["bisection_mod"] = bisection_mod.test(
-        TOL, FRAME, RANGE_STEPS, COEF_STEPS, DEGREE_STEPS, NUM_RUNS)
-
-
-
-    # Coefficient vs Time graphs
+    # Coefficient vs. Time
     for method in results:
         for bounds in results[method]:
             for degree in results[method][bounds]:
@@ -145,5 +200,25 @@ if __name__ == "__main__":
             plt.xscale("log")
             plt.show()
 
-            # print(method, bounds, degree, coefficient,
-            #       results[method][bounds][degree][coefficient])
+    # =====================================
+    #              Data Output
+    # =====================================
+    # Modified from:
+    # https://stackoverflow.com/questions/29400631/python-writing-nested-dictionary-to-csv
+    fields = ['Method', 'Bounds', 'Degree',
+              'Coefficient', 'Time', 'Iterations']
+    with open("results_output.csv", "w", newline='') as f:
+        w = csv.DictWriter(f, fields)
+        w.writeheader()
+        for method in results:
+            for bounds in results[method]:
+                for degree in results[method][bounds]:
+                    for coefficient in results[method][bounds][degree]:
+                        w.writerow({
+                            'Method': method,
+                            'Bounds': bounds,
+                            'Degree': degree,
+                            'Coefficient': coefficient,
+                            'Time': results[method][bounds][degree][coefficient][0],
+                            'Iterations': results[method][bounds][degree][coefficient][1]
+                        })
