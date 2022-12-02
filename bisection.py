@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-def bisection(f, a, b, nmax=1000, tol=1e-4, frame=True):
+def bisection(f, a, b, tol=1e-4, nmax=1000, frame=True):
     '''
     Parameters
     ----------
@@ -44,6 +44,12 @@ def bisection(f, a, b, nmax=1000, tol=1e-4, frame=True):
     for n in range(0, nmax-1):
         cn[n] = (an[n] + bn[n])/2
         fcn[n] = f(cn[n])
+        # need to check if fcn[n] is zero first
+        if (abs(fcn[n]) < tol):
+            if frame:
+                return pd.DataFrame({'an': an[:n+1], 'bn': bn[:n+1], 'cn': cn[:n+1], 'fcn': fcn[:n+1]})
+            else:
+                return an, bn, cn, fcn, n
         if f(an[n])*fcn[n] < 0:
             an[n+1] = an[n]
             bn[n+1] = cn[n]
@@ -53,11 +59,6 @@ def bisection(f, a, b, nmax=1000, tol=1e-4, frame=True):
         else:
             print("Bisection method fails.")
             return None
-        if (abs(fcn[n]) < tol):
-            if frame:
-                return pd.DataFrame({'an': an[:n+1], 'bn': bn[:n+1], 'cn': cn[:n+1], 'fcn': fcn[:n+1]})
-            else:
-                return an, bn, cn, fcn, n
 
     if frame:
         return pd.DataFrame({'an': an[:n+1], 'bn': bn[:n+1], 'cn': cn[:n+1], 'fcn': fcn[:n+1]})

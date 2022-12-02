@@ -16,6 +16,14 @@
 
 TODO: Citations
     professors code
+    course notes
     matplotlib docs
     pandas docs
+    https://en.wikipedia.org/wiki/Secant_method#Computational_example
+    https://en.wikipedia.org/wiki/Bisection_method#Algorithm
+    https://docs.python.org/3/library/csv.html
+        or maybe just use the python docs mainpage
+
+?: Change degree from odd to powers of 10 like coefficient/bounds
+    use the y offset to make sure the function has values on either side of x-axis
 """

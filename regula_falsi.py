@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np
 
-def regula_falsi(f, a, b, Nmax = 1000, TOL = 1e-4, Frame = True):
+def regula_falsi(f, a, b, tol = 1e-4, nmax = 1000, frame = True):
     '''
     Parameters
     ----------
@@ -11,9 +11,9 @@ def regula_falsi(f, a, b, Nmax = 1000, TOL = 1e-4, Frame = True):
         DESCRIPTION. a is the left side of interval [a, b]
     b : float
         DESCRIPTION. b is the right side of interval [a, b]
-    TOL : float, optional
+    tol : float, optional
         DESCRIPTION. Tolerance (epsilon). The default is 1e-4.
-    Frame : bool, optional
+    frame : bool, optional
         DESCRIPTION. If it is true, a dataframe will be returned. The default is True.
 
     Returns
@@ -28,17 +28,24 @@ def regula_falsi(f, a, b, Nmax = 1000, TOL = 1e-4, Frame = True):
         return None
     
     # let c_n be a point in (a_n, b_n)
-    an=np.zeros(Nmax, dtype=float)
-    bn=np.zeros(Nmax, dtype=float)
-    cn=np.zeros(Nmax, dtype=float)
-    fcn=np.zeros(Nmax, dtype=float)
+    an=np.zeros(nmax, dtype=float)
+    bn=np.zeros(nmax, dtype=float)
+    cn=np.zeros(nmax, dtype=float)
+    fcn=np.zeros(nmax, dtype=float)
     # initial values
     an[0]=a
     bn[0]=b
 
-    for n in range(0,Nmax-1):
+    n=0
+    for n in range(0,nmax-1):
         cn[n]= (an[n]*f(bn[n]) - bn[n]*f(an[n])) / (f(bn[n]) - f(an[n]))
         fcn[n]=f(cn[n])
+        # need to check if fcn[n] is zero first
+        if (abs(fcn[n]) < tol):
+            if frame:
+                return pd.DataFrame({'an': an[:n+1], 'bn': bn[:n+1], 'cn': cn[:n+1], 'fcn': fcn[:n+1]})
+            else:
+                return an, bn, cn, fcn, n
         if f(an[n])*fcn[n] < 0:
             an[n+1]=an[n]
             bn[n+1]=cn[n]
@@ -48,13 +55,8 @@ def regula_falsi(f, a, b, Nmax = 1000, TOL = 1e-4, Frame = True):
         else:
             print("Regula falsi method fails.")
             return None
-        if (abs(fcn[n]) < TOL):
-            if Frame:
-                return pd.DataFrame({'an': an[:n+1], 'bn': bn[:n+1], 'cn': cn[:n+1], 'fcn': fcn[:n+1]})
-            else:
-                return an, bn, cn, fcn, n
         
-    if Frame:
+    if frame:
         return pd.DataFrame({'an': an[:n+1], 'bn': bn[:n+1], 'cn': cn[:n+1], 'fcn': fcn[:n+1]})
     else:
         return an, bn, cn, fcn, n

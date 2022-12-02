@@ -42,6 +42,12 @@ def bisection_mod(f, a, b, tol=1e-4, frame=True):
     for n in range(0, nmax-1):
         cn[n] = (an[n] + bn[n])/2
         fcn[n] = f(cn[n])
+        # need to check if fcn[n] is zero first
+        if (abs(fcn[n]) < tol):
+            if frame:
+                return pd.DataFrame({'an': an[:n+1], 'bn': bn[:n+1], 'cn': cn[:n+1], 'fcn': fcn[:n+1]})
+            else:
+                return an, bn, cn, fcn, n
         if f(an[n])*fcn[n] < 0:
             an[n+1] = an[n]
             bn[n+1] = cn[n]
@@ -53,11 +59,6 @@ def bisection_mod(f, a, b, tol=1e-4, frame=True):
             print("f(an[n]): ", f(an[n]), " f(bn[n]): ", f(
                 bn[n]), " f(cn[n]): ", f(cn[n]), "nmax: ", nmax)
             return None
-        if (abs(fcn[n]) < tol):
-            if frame:
-                return pd.DataFrame({'an': an[:n+1], 'bn': bn[:n+1], 'cn': cn[:n+1], 'fcn': fcn[:n+1]})
-            else:
-                return an, bn, cn, fcn, n
 
     if frame:
         return pd.DataFrame({'an': an[:n+1], 'bn': bn[:n+1], 'cn': cn[:n+1], 'fcn': fcn[:n+1]})
