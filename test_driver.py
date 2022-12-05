@@ -16,7 +16,7 @@ from time import time_ns, time
 import csv
 
 # Constants
-NMAX = 1000
+NMAX = 10000
 TOL = 1E-10
 FRAME = True
 # range = 10^steps
@@ -91,7 +91,7 @@ def test(method, nmax, tol, frame, range_steps, coef_steps, degree_steps, num_ru
         result_dict[abs_range] = {}
         for degree in (2*x + 1 for x in range(0, degree_steps)):
             result_dict[abs_range][degree] = {}
-            for coef in (10**x for x in range(0, coef_steps)):
+            for coef in (100**x for x in range(0, coef_steps)):
                 print(
                     f"abs_range: {abs_range}, degree: {degree}, coef: {coef}")
                 elapsed_time = 0
@@ -115,7 +115,7 @@ def test(method, nmax, tol, frame, range_steps, coef_steps, degree_steps, num_ru
                         # store time in nanoseconds
                         elapsed_time += (end - start)
                         # store number of iterations
-                        num_iterations += len(result) - 1
+                        num_iterations += len(result)
                         valid_runs += 1
                 # store result
                 if valid_runs > 0:
@@ -183,6 +183,8 @@ if __name__ == "__main__":
     # {method: {range#: {degree#: {coefficient#: [time, #iterations]}}}}
     results = {}
     for method in METHODS:
+        if (method != "fixed_point"):
+            continue
         print("\n\n\n=========================================")
         print(f"\t{method}")
         print("\n=========================================")
@@ -198,7 +200,7 @@ if __name__ == "__main__":
     # TODO: save graphs to file
     # =====================================
 
-    # Coefficient vs. Time
+    # # Coefficient vs. Time
     # for method in results:
     #     for bounds in results[method]:
     #         for degree in results[method][bounds]:
@@ -214,7 +216,9 @@ if __name__ == "__main__":
     #         plt.ylabel("Time (ns)")
     #         plt.title(str(method).capitalize() + ": Bounds " + str(bounds))
     #         plt.xscale("log")
-    #         plt.show()
+    #         # plt.show()
+    #         name = str(method) + "_bounds_" + str(bounds) + "_time.png"
+    #         plt.savefig(name)
 
     # =====================================
     #              Data Output
